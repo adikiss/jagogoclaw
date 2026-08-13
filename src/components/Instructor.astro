@@ -1,0 +1,58 @@
+---
+import { useTranslations, getLocaleFromUrl } from '@i18n/utils';
+import Badge from './ui/Badge.astro';
+import { instructor } from '@data/site';
+
+const locale = getLocaleFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+const initials = instructor.name
+  .split(' ')
+  .map((n) => n[0])
+  .join('')
+  .slice(0, 2)
+  .toUpperCase();
+---
+
+<section id="instructor" class="bg-slate-50/70 py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <Badge accent="accent">{t('instructor.eyebrow')}</Badge>
+      <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        {t('instructor.title')}
+      </h2>
+    </div>
+
+    <div class="mx-auto mt-12 max-w-4xl">
+      <div class="flex flex-col items-center gap-8 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200/70 sm:p-10 md:flex-row md:gap-10">
+        <div class="flex-none">
+          <div class="relative h-32 w-32 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-violet-600 ring-4 ring-white sm:h-36 sm:w-36">
+            <img
+              src={instructor.photo}
+              alt={instructor.name}
+              class="h-full w-full object-cover"
+              loading="lazy"
+              onerror="this.style.display='none';this.parentElement.classList.add('flex','items-center','justify-center')"
+              onload="this.parentElement.classList.remove('flex','items-center','justify-center')"
+            />
+            <span class="initials-fallback absolute inset-0 flex items-center justify-center text-4xl font-extrabold text-white">
+              {initials}
+            </span>
+          </div>
+        </div>
+
+        <div class="text-center md:flex-1 md:text-left">
+          <h3 class="text-2xl font-bold text-slate-900">{instructor.name}</h3>
+          <p class="mt-1 text-sm font-semibold text-brand-600">{t('instructor.role')}</p>
+          <p class="mt-4 text-base leading-relaxed text-slate-600">{t('instructor.bio')}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  img[src]:not([src='']) ~ .initials-fallback {
+    display: none;
+  }
+</style>

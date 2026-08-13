@@ -1,0 +1,60 @@
+---
+import { useTranslations, getLocaleFromUrl } from '@i18n/utils';
+import Button from './ui/Button.astro';
+import Badge from './ui/Badge.astro';
+import { site, course } from '@data/site';
+
+const locale = getLocaleFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+const features = [
+  'pricing.feat.video',
+  'pricing.feat.templates',
+  'pricing.feat.updates',
+  'pricing.feat.community',
+  'pricing.feat.certificate',
+] as const;
+
+const checkIcon = `<svg class="h-5 w-5 flex-none text-brand-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>`;
+---
+
+<section id="pricing" class="bg-white py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <Badge accent="violet">{t('pricing.eyebrow')}</Badge>
+      <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        {t('pricing.title')}
+      </h2>
+      <p class="mt-4 text-lg text-slate-600">{t('pricing.subtitle')}</p>
+    </div>
+
+    <div class="mx-auto mt-12 max-w-md">
+      <div class="relative overflow-hidden rounded-3xl bg-slate-900 p-8 text-white shadow-2xl shadow-slate-900/20 sm:p-10">
+        <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-brand-500/40 to-violet-500/30 blur-2xl"></div>
+
+        <div class="relative">
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-extrabold sm:text-5xl">{course.price}</span>
+          </div>
+          <p class="mt-2 text-sm text-slate-300">{t('pricing.priceNote')}</p>
+
+          <Button href={site.registerUrl} size="lg" variant="white" class="mt-8 w-full">
+            {t('pricing.cta')}
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            </svg>
+          </Button>
+
+          <ul class="mt-8 space-y-3 border-t border-white/10 pt-8">
+            {features.map((feat) => (
+              <li class="flex items-start gap-3">
+                <Fragment set:html={checkIcon} />
+                <span class="text-sm leading-relaxed text-slate-200">{t(feat)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

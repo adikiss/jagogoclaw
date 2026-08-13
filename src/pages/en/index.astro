@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import Hero from '@components/Hero.astro';
+import Curriculum from '@components/Curriculum.astro';
+import Pricing from '@components/Pricing.astro';
+import Instructor from '@components/Instructor.astro';
+import { useTranslations } from '@i18n/utils';
+
+const t = useTranslations('en');
+---
+
+<BaseLayout
+  title={`${t('hero.title')} — ${t('site.name')}`}
+  description={t('hero.subtitle')}
+>
+  <Hero />
+  <Curriculum />
+  <Pricing />
+  <Instructor />
+</BaseLayout>

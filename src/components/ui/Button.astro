@@ -1,0 +1,36 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type Variant = 'primary' | 'secondary' | 'ghost' | 'white';
+type Size = 'sm' | 'md' | 'lg';
+
+interface Props extends HTMLAttributes<'a'> {
+  variant?: Variant;
+  size?: Size;
+  href: string;
+}
+
+const { variant = 'primary', size = 'md', class: className = '', ...rest } = Astro.props;
+
+const base =
+  'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+
+const variants: Record<Variant, string> = {
+  primary:
+    'bg-brand-600 text-white shadow-lg shadow-brand-600/20 hover:bg-brand-700 hover:shadow-xl hover:shadow-brand-600/30 hover:-translate-y-0.5 active:translate-y-0',
+  secondary:
+    'bg-white text-slate-900 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:ring-slate-300',
+  ghost: 'text-slate-700 hover:bg-slate-100',
+  white: 'bg-white text-slate-900 shadow-lg shadow-black/10 hover:bg-slate-100 hover:-translate-y-0.5 active:translate-y-0',
+};
+
+const sizes: Record<Size, string> = {
+  sm: 'px-3.5 py-2 text-sm',
+  md: 'px-5 py-2.5 text-sm',
+  lg: 'px-7 py-3.5 text-base',
+};
+---
+
+<a class:list={[base, variants[variant], sizes[size], className]} {...rest}>
+  <slot />
+</a>

@@ -1,0 +1,33 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
+  accent?: 'brand' | 'violet' | 'accent' | 'slate';
+  hover?: boolean;
+}
+
+const {
+  accent = 'brand',
+  hover = true,
+  class: className = '',
+  ...rest
+} = Astro.props;
+
+const accents = {
+  brand: 'text-brand-600 bg-brand-50 ring-brand-100',
+  violet: 'text-violet-600 bg-violet-50 ring-violet-100',
+  accent: 'text-accent-600 bg-accent-50 ring-accent-100',
+  slate: 'text-slate-600 bg-slate-50 ring-slate-100',
+};
+---
+
+<span
+  class:list={[
+    'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset',
+    accents[accent],
+    className,
+  ]}
+  {...rest}
+>
+  <slot />
+</span>

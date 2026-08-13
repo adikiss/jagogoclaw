@@ -1,0 +1,20 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
+  hover?: boolean;
+}
+
+const { hover = true, class: className = '', ...rest } = Astro.props;
+---
+
+<div
+  class:list={[
+    'rounded-2xl bg-white ring-1 ring-slate-200/70',
+    hover && 'transition-all duration-200 hover:ring-slate-300 hover:shadow-lg hover:shadow-slate-200/50',
+    className,
+  ]}
+  {...rest}
+>
+  <slot />
+</div>

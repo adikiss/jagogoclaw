@@ -1,0 +1,102 @@
+---
+import '../styles/global.css';
+import { useTranslations, getLocaleFromUrl, getLocalizedPath } from '@i18n/utils';
+import { locales } from '@i18n/ui';
+import Navbar from '@components/Navbar.astro';
+import Footer from '@components/Footer.astro';
+import { site, instructor, course } from '@data/site';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const locale = getLocaleFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '') + '/';
+const alternates = locales.map((loc) => ({
+  loc,
+  href: new URL(getLocalizedPath('', loc), Astro.site).href,
+}));
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: title,
+  description,
+  provider: {
+    '@type': 'Organization',
+    name: site.name,
+    sameAs: site.url,
+  },
+  instructor: {
+    '@type': 'Person',
+    name: instructor.name,
+    jobTitle: t('instructor.role'),
+  },
+  inLanguage: locale === 'id' ? 'id-ID' : 'en-US',
+  offers: {
+    '@type': 'Offer',
+    price: course.priceValue,
+    priceCurrency: 'IDR',
+    availability: 'https://schema.org/InStock',
+    url: site.registerUrl,
+  },
+  hasCourseInstance: {
+    '@type': 'CourseInstance',
+    courseMode: 'Online',
+    courseWorkload: 'PT15H',
+  },
+};
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/goclaw-icon.png" />
+    <link rel="apple-touch-icon" href="/images/goclaw-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={locale === 'id' ? 'id_ID' : 'en_US'} />
+    <meta property="og:image" content={new URL('/og-image.jpg', Astro.site).href} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    {alternates.map((alt) => (
+      <link rel="alternate" hreflang={alt.loc} href={alt.href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={new URL('/', Astro.site).href} />
+
+    <meta name="theme-color" content="#4f46e5" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+  </head>
+  <body class="min-h-screen antialiased">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white"
+    >
+      Skip to content
+    </a>
+    <Navbar />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

@@ -1,0 +1,76 @@
+---
+import { useTranslations, getLocaleFromUrl } from '@i18n/utils';
+import Badge from './ui/Badge.astro';
+import { curriculum } from '@data/curriculum';
+
+const locale = getLocaleFromUrl(Astro.url);
+const t = useTranslations(locale);
+const days = curriculum[locale];
+
+const accentMap = {
+  brand: {
+    badge: 'bg-brand-100 text-brand-700 ring-brand-200',
+    num: 'bg-brand-600 text-white',
+    line: 'bg-brand-200',
+  },
+  violet: {
+    badge: 'bg-violet-100 text-violet-700 ring-violet-200',
+    num: 'bg-violet-600 text-white',
+    line: 'bg-violet-200',
+  },
+  accent: {
+    badge: 'bg-accent-100 text-accent-600 ring-accent-200',
+    num: 'bg-accent-500 text-white',
+    line: 'bg-accent-200',
+  },
+} as const;
+---
+
+<section id="curriculum" class="bg-slate-50/70 py-20 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <Badge accent="brand">{t('curriculum.eyebrow')}</Badge>
+      <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        {t('curriculum.title')}
+      </h2>
+      <p class="mt-4 text-lg text-slate-600">{t('curriculum.subtitle')}</p>
+    </div>
+
+    <div class="mt-14 grid gap-6 lg:grid-cols-3 lg:gap-8">
+      {days.map((day) => {
+        const accent = accentMap[day.accent];
+        return (
+          <div class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/70 sm:p-7">
+            <div class="flex items-center gap-3">
+              <span class={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-base font-bold ${accent.num}`}>
+                {day.day}
+              </span>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t('curriculum.day')} {day.day}
+                </p>
+                <h3 class="text-lg font-bold text-slate-900">{t(`curriculum.${day.key}.title`)}</h3>
+              </div>
+            </div>
+
+            <p class="mt-4 text-sm leading-relaxed text-slate-500">{t(`curriculum.${day.key}.desc`)}</p>
+
+            <ul class="mt-6 space-y-3 border-t border-slate-100 pt-6">
+              {day.modules.map((mod) => (
+                <li class="flex gap-3">
+                  <span class={`mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-md text-xs font-bold ${accent.badge} ring-1 ring-inset`}>
+                    {mod.num}
+                  </span>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-800">{mod.title}</p>
+                    <p class="mt-0.5 text-xs leading-relaxed text-slate-500">{mod.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
