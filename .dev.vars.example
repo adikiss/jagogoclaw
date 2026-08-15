@@ -1,0 +1,5 @@
+# Salin file ini menjadi .dev.vars untuk pengembangan lokal
+# Password login dashboard admin (dev)
+ADMIN_PASSWORD=admin123
+# Secret untuk menandatangani session cookie (dev)
+SESSION_SECRET=ganti-dengan-string-acak-untuk-dev

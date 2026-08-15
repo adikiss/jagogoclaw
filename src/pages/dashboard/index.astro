@@ -1,0 +1,124 @@
+---
+export const prerender = false;
+
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { getDB } from '@db/client';
+import { statusLabels, paymentLabels, formatDate, type Participant } from '@db/types';
+
+const db = getDB(Astro.locals);
+
+interface Stats {
+  total: number;
+  active: number;
+  pending: number;
+  paid: number;
+}
+
+const statsRow = await db
+  .prepare(
+    `SELECT
+      COUNT(*) AS total,
+      COALESCE(SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END), 0) AS active,
+      COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS pending,
+      COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END), 0) AS paid
+    FROM participants`
+  )
+  .first<Stats>();
+
+const recent = await db
+  .prepare('SELECT * FROM participants ORDER BY created_at DESC, id DESC LIMIT 5')
+  .all<Participant>();
+
+const cards = [
+  { label: 'Total Peserta', value: statsRow?.total ?? 0, color: 'text-slate-900' },
+  { label: 'Aktif', value: statsRow?.active ?? 0, color: 'text-emerald-600' },
+  { label: 'Menunggu', value: statsRow?.pending ?? 0, color: 'text-amber-600' },
+  { label: 'Lunas', value: statsRow?.paid ?? 0, color: 'text-brand-600' },
+];
+---
+
+<AdminLayout title="Dashboard">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+      <p class="mt-1 text-sm text-slate-500">Ringkasan peserta pelatihan Jago GoClaw.</p>
+    </div>
+    <a
+      href="/dashboard/peserta"
+      class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700"
+    >
+      Kelola Peserta
+    </a>
+  </div>
+
+  <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    {cards.map((card) => (
+      <div class="rounded-2xl bg-white p-5 ring-1 ring-slate-200/70">
+        <p class="text-sm font-medium text-slate-500">{card.label}</p>
+        <p class:list={['mt-2 text-3xl font-extrabold', card.color]}>{card.value}</p>
+      </div>
+    ))}
+  </div>
+
+  <div class="mt-8 rounded-2xl bg-white ring-1 ring-slate-200/70">
+    <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <h2 class="text-sm font-semibold text-slate-900">Peserta Terbaru</h2>
+      <a href="/dashboard/peserta" class="text-sm font-medium text-brand-600 hover:text-brand-700">Lihat semua →</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-5 py-3 font-semibold">Nama</th>
+            <th class="px-5 py-3 font-semibold">Email</th>
+            <th class="px-5 py-3 font-semibold">Status</th>
+            <th class="px-5 py-3 font-semibold">Pembayaran</th>
+            <th class="px-5 py-3 font-semibold">Terdaftar</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {recent.results.map((p) => (
+            <tr class="hover:bg-slate-50/60">
+              <td class="px-5 py-3 font-medium text-slate-800">{p.name}</td>
+              <td class="px-5 py-3 text-slate-600">{p.email}</td>
+              <td class="px-5 py-3">
+                <span class:list={[
+                  'inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                  p.status === 'active' && 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+                  p.status === 'pending' && 'bg-amber-50 text-amber-700 ring-amber-200',
+                  p.status === 'cancelled' && 'bg-slate-100 text-slate-500 ring-slate-200',
+                ]}>
+                  {statusLabels[p.status]}
+                </span>
+              </td>
+              <td class="px-5 py-3">
+                <span class:list={[
+                  'inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                  p.payment_status === 'paid' && 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+                  p.payment_status === 'unpaid' && 'bg-rose-50 text-rose-700 ring-rose-200',
+                ]}>
+                  {paymentLabels[p.payment_status]}
+                </span>
+              </td>
+              <td class="px-5 py-3 text-slate-500">{formatDate(p.created_at)}</td>
+            </tr>
+          ))}
+          {recent.results.length === 0 && (
+            <tr>
+              <td colspan="5" class="px-5 py-10 text-center text-slate-400">
+                Belum ada peserta. Tambahkan dari menu <a href="/dashboard/peserta" class="font-medium text-brand-600 hover:underline">Peserta</a>.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white/60 p-5">
+    <p class="text-sm font-semibold text-slate-700">Tahap berikutnya</p>
+    <p class="mt-1 text-sm text-slate-500">
+      Modul admin <strong>Kurikulum</strong>, <strong>Harga</strong>, dan <strong>Halaman Depan</strong> akan dibangun bertahap setelah data peserta berjalan stabil.
+    </p>
+  </div>
+</AdminLayout>

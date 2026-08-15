@@ -16,7 +16,7 @@ export const ui = {
     'nav.curriculum': 'Kurikulum',
     'nav.pricing': 'Harga',
     'nav.instructor': 'Instruktur',
-    'nav.cta': 'Daftar Sekarang',
+    'nav.cta': 'Daftar',
 
     'lang.switch': 'English',
 
@@ -25,7 +25,7 @@ export const ui = {
     'hero.subtitle': 'GoClaw Lebih OP (Over Power) dari OpenClaw dan Hermes',
     'hero.description':
       'Pelajari cara membangun agent AI otomatis untuk bisnis Anda: dari input keuangan, scan struk, hingga integrasi WordPress & WooCommerce. Praktik langsung, bukan teori.',
-    'hero.cta.primary': 'Daftar Sekarang — Rp 99.000',
+    'hero.cta.primary': 'Daftar — Rp 99.000',
     'hero.cta.secondary': 'Lihat Kurikulum',
     'hero.stats.modules': 'Modul',
     'hero.stats.days': 'Hari',
@@ -49,7 +49,7 @@ export const ui = {
     'pricing.subtitle': 'Akses penuh ke seluruh 15 modul + praktik langsung.',
     'pricing.price': 'Rp 99.000',
     'pricing.priceNote': 'Sekali bayar · Akses selamanya',
-    'pricing.cta': 'Daftar Sekarang',
+    'pricing.cta': 'Daftar',
     'pricing.feat.video': '15 modul video + praktik langsung',
     'pricing.feat.templates': 'Template agent siap pakai',
     'pricing.feat.updates': 'Update materi selamanya',
@@ -77,7 +77,7 @@ export const ui = {
     'nav.curriculum': 'Curriculum',
     'nav.pricing': 'Pricing',
     'nav.instructor': 'Instructor',
-    'nav.cta': 'Enroll Now',
+    'nav.cta': 'Enroll',
 
     'lang.switch': 'Bahasa Indonesia',
 
@@ -86,7 +86,7 @@ export const ui = {
     'hero.subtitle': 'GoClaw Is Overpowered Compared to OpenClaw and Hermes',
     'hero.description':
       'Learn to build AI agents that automate your business: from expense tracking, receipt scanning, to WordPress & WooCommerce integration. Hands-on practice, not just theory.',
-    'hero.cta.primary': 'Enroll Now — Rp 99.000',
+    'hero.cta.primary': 'Enroll — Rp 99.000',
     'hero.cta.secondary': 'View Curriculum',
     'hero.stats.modules': 'Modules',
     'hero.stats.days': 'Days',
@@ -110,7 +110,7 @@ export const ui = {
     'pricing.subtitle': 'Full access to all 15 modules + hands-on practice.',
     'pricing.price': 'Rp 99.000',
     'pricing.priceNote': 'One-time payment · Lifetime access',
-    'pricing.cta': 'Enroll Now',
+    'pricing.cta': 'Enroll',
     'pricing.feat.video': '15 video modules + hands-on practice',
     'pricing.feat.templates': 'Ready-to-use agent templates',
     'pricing.feat.updates': 'Lifetime material updates',

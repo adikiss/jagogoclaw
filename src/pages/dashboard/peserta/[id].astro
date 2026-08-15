@@ -1,0 +1,93 @@
+---
+export const prerender = false;
+
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { getDB } from '@db/client';
+import type { Participant } from '@db/types';
+
+const db = getDB(Astro.locals);
+const idParam = Astro.params.id;
+const id = Number(idParam);
+
+if (!Number.isInteger(id) || id <= 0) {
+  return Astro.redirect('/dashboard/peserta?error=notfound');
+}
+
+const participant = await db.prepare('SELECT * FROM participants WHERE id = ?').bind(id).first<Participant>();
+
+if (!participant) {
+  return Astro.redirect('/dashboard/peserta?error=notfound');
+}
+
+const inputClass =
+  'mt-1.5 block w-full rounded-xl border-0 px-3.5 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-500';
+---
+
+<AdminLayout title={`Edit Peserta — ${participant.name}`}>
+  <div class="mx-auto max-w-2xl">
+    <a href="/dashboard/peserta" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+      Kembali ke daftar
+    </a>
+
+    <div class="mt-4 rounded-2xl bg-white p-6 ring-1 ring-slate-200/70 sm:p-8">
+      <h1 class="text-xl font-bold text-slate-900">Edit Peserta</h1>
+      <p class="mt-1 text-sm text-slate-500">ID #{participant.id} · Terdaftar {participant.created_at?.slice(0, 10)}</p>
+
+      <form method="POST" action={`/api/admin/participants/${participant.id}`} class="mt-6 grid gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label for="name" class="block text-sm font-medium text-slate-700">Nama <span class="text-rose-500">*</span></label>
+          <input type="text" name="name" id="name" required value={participant.name} class={inputClass} />
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium text-slate-700">Email <span class="text-rose-500">*</span></label>
+          <input type="email" name="email" id="email" required value={participant.email} class={inputClass} />
+        </div>
+        <div>
+          <label for="phone" class="block text-sm font-medium text-slate-700">WhatsApp</label>
+          <input type="tel" name="phone" id="phone" value={participant.phone ?? ''} placeholder="08xxxxxxxxxx" class={inputClass} />
+        </div>
+        <div>
+          <label for="status" class="block text-sm font-medium text-slate-700">Status</label>
+          <select name="status" id="status" class={inputClass}>
+            <option value="pending" selected={participant.status === 'pending'}>Menunggu</option>
+            <option value="active" selected={participant.status === 'active'}>Aktif</option>
+            <option value="cancelled" selected={participant.status === 'cancelled'}>Batal</option>
+          </select>
+        </div>
+        <div>
+          <label for="payment_status" class="block text-sm font-medium text-slate-700">Pembayaran</label>
+          <select name="payment_status" id="payment_status" class={inputClass}>
+            <option value="unpaid" selected={participant.payment_status === 'unpaid'}>Belum Bayar</option>
+            <option value="paid" selected={participant.payment_status === 'paid'}>Lunas</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <label for="notes" class="block text-sm font-medium text-slate-700">Catatan</label>
+          <textarea name="notes" id="notes" rows="3" placeholder="Opsional" class={inputClass}>{participant.notes ?? ''}</textarea>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
+          <button
+            type="submit"
+            class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700"
+          >
+            Simpan Perubahan
+          </button>
+          <a href="/dashboard/peserta" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50">
+            Batal
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <div class="mt-4 rounded-2xl bg-white p-6 ring-1 ring-rose-200/70">
+      <p class="text-sm font-semibold text-rose-700">Hapus Peserta</p>
+      <p class="mt-1 text-sm text-slate-500">Tindakan ini permanen dan tidak bisa dibatalkan.</p>
+      <form method="POST" action={`/api/admin/participants/${participant.id}/delete`} class="mt-4" onsubmit="return confirm('Yakin hapus peserta ini? Tindakan ini permanen.')">
+        <button type="submit" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-rose-600/20 transition-colors hover:bg-rose-700">
+          Hapus
+        </button>
+      </form>
+    </div>
+  </div>
+</AdminLayout>

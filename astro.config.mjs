@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import cloudflare from '@astrojs/cloudflare';
 
 // TODO: ganti dengan domain final setelah beli
 const SITE_URL = 'https://jagoclaw.id';
@@ -14,6 +15,10 @@ export default defineConfig({
       prefixDefaultLocale: false,
     },
   },
+  adapter: cloudflare({
+    platformProxy: { enabled: true },
+    imageService: 'passthrough',
+  }),
   integrations: [
     sitemap({
       i18n: {

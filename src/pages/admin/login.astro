@@ -1,0 +1,69 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+import { verifySessionToken, getSecret } from '@lib/auth';
+
+const token = Astro.cookies.get('admin_session')?.value;
+const secret = getSecret(Astro.locals, 'SESSION_SECRET', 'insecure-dev-secret');
+if (await verifySessionToken(token, secret)) {
+  return Astro.redirect('/dashboard');
+}
+
+const error = Astro.url.searchParams.get('error');
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/images/goclaw-icon.png" />
+    <title>Login Admin — Jago GoClaw</title>
+  </head>
+  <body class="flex min-h-screen items-center justify-center bg-slate-100 px-4 antialiased">
+    <div class="w-full max-w-sm">
+      <div class="mb-6 flex justify-center">
+        <img src="/images/goclaw-icon.png" alt="GoClaw" width="64" height="64" class="h-16 w-16 rounded-2xl object-contain shadow-md ring-1 ring-slate-200/60" />
+      </div>
+
+      <div class="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-slate-200/70">
+        <h1 class="text-center text-xl font-bold text-slate-900">Admin Jago GoClaw</h1>
+        <p class="mt-1 text-center text-sm text-slate-500">Masuk untuk mengelola dashboard</p>
+
+        {error && (
+          <div class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-200">
+            Password salah. Coba lagi.
+          </div>
+        )}
+
+        <form method="POST" action="/api/admin/login" class="mt-6 space-y-4">
+          <div>
+            <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              required
+              autofocus
+              autocomplete="current-password"
+              class="mt-1.5 block w-full rounded-xl border-0 px-3.5 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-500"
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+          >
+            Masuk
+          </button>
+        </form>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-slate-400">
+        <a href="/" class="hover:text-slate-600">← Kembali ke situs</a>
+      </p>
+    </div>
+  </body>
+</html>

@@ -1,3 +1,0 @@
-# Cloudflare Pages SPA fallback
-# Astro static output sudah handle routing, baris ini cadangan aman
-/*    /index.html   200
