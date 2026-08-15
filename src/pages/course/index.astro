@@ -5,7 +5,7 @@ import '../../styles/global.css';
 import Logo from '@components/ui/Logo.astro';
 import { getDB } from '@db/client';
 import type { CourseModule, Participant } from '@db/types';
-import { toEmbedUrl } from '@lib/video';
+import { parseVideoUrl, buildEmbedUrl } from '@lib/video';
 
 const db = getDB(Astro.locals);
 const participantId = Astro.locals.participantId!;
@@ -27,6 +27,9 @@ const { results: modules } = await db
 const selectedId = Number(Astro.url.searchParams.get('m'));
 const selected =
   modules.find((m) => m.id === selectedId) ?? modules.find((m) => m.video_url) ?? modules[0] ?? null;
+
+const selectedRef = selected?.video_url ? parseVideoUrl(selected.video_url) : null;
+const embedUrl = selectedRef ? await buildEmbedUrl(selectedRef, Astro.locals) : null;
 
 const dayTitles: Record<number, string> = { 1: 'Hari 1 — Dasar', 2: 'Hari 2 — Praktik', 3: 'Hari 3 — Advanced' };
 const days = [1, 2, 3].map((d) => ({ day: d, title: dayTitles[d], items: modules.filter((m) => m.day === d) }));
@@ -63,9 +66,9 @@ const days = [1, 2, 3].map((d) => ({ day: d, title: dayTitles[d], items: modules
           {selected ? (
             <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70">
               <div class="aspect-video w-full bg-slate-900">
-                {selected.video_url ? (
+                {embedUrl ? (
                   <iframe
-                    src={toEmbedUrl(selected.video_url)}
+                    src={embedUrl}
                     title={selected.title_id}
                     class="h-full w-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

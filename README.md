@@ -38,6 +38,18 @@ Set di `.dev.vars` (lokal) dan Cloudflare Pages → Settings → Environment var
 |---|---|
 | `ADMIN_PASSWORD` | Password login dashboard admin |
 | `SESSION_SECRET` | Secret penanda tanda tangan session cookie (string acak panjang) |
+| `STREAM_CUSTOMER_CODE` *(opsional)* | Customer code Cloudflare Stream (dari dashboard Stream) |
+| `STREAM_SIGNING_KEY_ID` *(opsional)* | Key ID signing Stream (Stream → Settings → signed URLs) |
+| `STREAM_SIGNING_KEY` *(opsional)* | Private key PEM signing Stream — embed video jadi berm token yang tidak bisa dibagikan |
+
+## Video Kursus (Cloudflare Stream)
+
+1. Upload video di **dash.cloudflare.com → Stream**.
+2. Aktifkan **Restrict viewing (signed URLs)** di Settings, buat signing key.
+3. Set env vars `STREAM_CUSTOMER_CODE`, `STREAM_SIGNING_KEY_ID`, `STREAM_SIGNING_KEY` di `.dev.vars` (lokal) dan Pages → Settings → Environment variables (produksi).
+4. Di dashboard admin → **Kurikulum**, isi kolom video dengan **UID** video (32 karakter hex) atau URL YouTube (fallback tanpa proteksi).
+
+Halaman `/course` otomatis membuat token tanda tangan (JWT RS256, berlaku 2 jam, per-peserta saat halaman dibuka) — link video tidak bisa dibagikan ke orang lain.
 
 ## Setup D1 (sekali saja, untuk produksi)
 

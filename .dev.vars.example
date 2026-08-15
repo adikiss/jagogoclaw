@@ -3,3 +3,11 @@
 ADMIN_PASSWORD=admin123
 # Secret untuk menandatangani session cookie (dev)
 SESSION_SECRET=ganti-dengan-string-acak-untuk-dev
+
+# Cloudflare Stream (opsional — untuk video kursus dengan token tanda tangan)
+# 1. dash.cloudflare.com → Stream → dapatkan "Customer code" (mis. f1e3...)
+# 2. Stream → Settings → "Restrict viewing" / signed URLs → buat signing key
+# 3. Salin key ID dan private key (PEM) ke bawah ini
+STREAM_CUSTOMER_CODE=
+STREAM_SIGNING_KEY_ID=
+STREAM_SIGNING_KEY=
