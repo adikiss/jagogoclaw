@@ -1,5 +1,8 @@
 # Jago GoClaw — Landing Page + Dashboard Admin
 
+> Catatan deploy: setelah menambah/mengubah Environment variables di Cloudflare Pages,
+> **deployment baru wajib di-trigger** (push commit atau "Retry deployment") agar nilainya aktif.
+
 Landing page bilingual (ID/EN) untuk pelatihan **Jago GoClaw** + dashboard admin (SSR).
 Dibangun dengan **Astro 5 + Tailwind CSS 4**, database **Cloudflare D1**, deploy ke **Cloudflare Pages**.
 
