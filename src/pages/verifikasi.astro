@@ -1,0 +1,141 @@
+---
+export const prerender = false;
+
+import '../styles/global.css';
+import Navbar from '@components/Navbar.astro';
+import Footer from '@components/Footer.astro';
+import { getDB } from '@db/client';
+import type { Participant } from '@db/types';
+import { buildCertificateNumber } from '@db/types';
+
+const no = (Astro.url.searchParams.get('no') ?? '').trim().toUpperCase();
+
+let result: { ok: boolean; name?: string; certNo?: string; date?: string; total?: number } | null = null;
+
+if (no) {
+  const match = no.match(/^JGC-(\d{4})-(\d{1,6})$/);
+  if (match) {
+    const id = Number(match[2]);
+    try {
+      const db = getDB(Astro.locals);
+      const p = await db.prepare('SELECT * FROM participants WHERE id = ?').bind(id).first<Participant>();
+
+      if (p && p.status === 'active' && p.payment_status === 'paid') {
+        const total = (await db.prepare('SELECT COUNT(*) AS n FROM modules').first<{ n: number }>())?.n ?? 0;
+        const done = (
+          await db
+            .prepare('SELECT COUNT(*) AS n FROM module_progress WHERE participant_id = ?')
+            .bind(id)
+            .first<{ n: number }>()
+        )?.n ?? 0;
+        const issued = (
+          await db
+            .prepare('SELECT MAX(completed_at) AS t FROM module_progress WHERE participant_id = ?')
+            .bind(id)
+            .first<{ t: string | null }>()
+        )?.t;
+
+        if (total > 0 && done >= total && issued) {
+          const certNo = buildCertificateNumber(id, issued);
+          if (certNo === no) {
+            result = { ok: true, name: p.name, certNo, date: issued.slice(0, 10), total };
+          }
+        }
+      }
+    } catch {
+      result = null;
+    }
+  }
+  if (!result) result = { ok: false };
+}
+
+const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+function formatTanggal(iso: string): string {
+  const [y, mo, d] = iso.slice(0, 10).split('-').map(Number);
+  return `${d} ${months[(mo ?? 1) - 1]} ${y}`;
+}
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/png" href="/images/goclaw-icon.png" />
+    <title>Verifikasi Sertifikat — Jago GoClaw</title>
+  </head>
+  <body class="min-h-screen bg-white antialiased">
+    <Navbar />
+    <main class="flex min-h-[calc(100vh-8rem)] items-center justify-center bg-gradient-to-b from-brand-50/60 to-white py-12">
+      <div class="w-full max-w-lg px-4">
+        <div class="text-center">
+          <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Verifikasi Sertifikat</h1>
+          <p class="mt-2 text-sm text-slate-500">Masukkan nomor sertifikat untuk memeriksa keasliannya.</p>
+        </div>
+
+        <form method="GET" action="/verifikasi" class="mt-8 rounded-2xl bg-white p-5 shadow-lg ring-1 ring-slate-200/70 sm:p-6">
+          <label for="no" class="block text-sm font-medium text-slate-700">Nomor Sertifikat</label>
+          <div class="mt-2 flex gap-2">
+            <input
+              type="text"
+              name="no"
+              id="no"
+              required
+              placeholder="JGC-2026-0001"
+              value={no}
+              class="w-full rounded-xl border-0 px-3.5 py-2.5 font-mono text-sm uppercase shadow-sm ring-1 ring-inset ring-slate-300 placeholder:normal-case placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-500"
+            />
+            <button type="submit" class="flex-none rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700">
+              Cek
+            </button>
+          </div>
+        </form>
+
+        {result?.ok && (
+          <div class="mt-6 rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-200 sm:p-6">
+            <div class="flex items-center gap-3">
+              <span class="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-emerald-100">
+                <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+              </span>
+              <div>
+                <p class="font-bold text-emerald-800">Sertifikat Terverifikasi ✓</p>
+                <p class="text-xs text-emerald-700">Diterbitkan oleh Jago GoClaw</p>
+              </div>
+            </div>
+            <dl class="mt-4 space-y-2 text-sm">
+              <div class="flex justify-between gap-3">
+                <dt class="text-emerald-700">Nama</dt>
+                <dd class="font-semibold text-emerald-900">{result.name}</dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-emerald-700">No. Sertifikat</dt>
+                <dd class="font-mono font-semibold text-emerald-900">{result.certNo}</dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-emerald-700">Tanggal Selesai</dt>
+                <dd class="font-semibold text-emerald-900">{formatTanggal(result.date ?? '')}</dd>
+              </div>
+            </dl>
+          </div>
+        )}
+
+        {result && !result.ok && (
+          <div class="mt-6 rounded-2xl bg-rose-50 p-5 ring-1 ring-rose-200 sm:p-6">
+            <div class="flex items-center gap-3">
+              <span class="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-rose-100">
+                <svg class="h-6 w-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+              </span>
+              <div>
+                <p class="font-bold text-rose-800">Sertifikat tidak ditemukan</p>
+                <p class="text-xs text-rose-600">Nomor tidak valid atau belum terverifikasi. Periksa kembali penulisannya.</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>

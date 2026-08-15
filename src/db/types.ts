@@ -27,6 +27,16 @@ export interface CourseModule {
   video_url: string | null;
 }
 
+export interface ModuleProgress {
+  participant_id: number;
+  module_id: number;
+  completed_at: string;
+}
+
+export function buildCertificateNumber(participantId: number, issuedAt: string): string {
+  return `JGC-${issuedAt.slice(0, 4)}-${String(participantId).padStart(4, '0')}`;
+}
+
 export interface BankAccount {
   bank: string;
   number: string;

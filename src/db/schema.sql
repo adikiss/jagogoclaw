@@ -36,8 +36,7 @@ CREATE TABLE modules (
   UNIQUE(day, num)
 );
 
-INSERT INTO modules (day, num, title_id, title_en, desc_id, desc_en) VALUES
-(1, 1, 'Apa itu GoClaw', 'What is GoClaw', 'Pengenalan platform & cara kerjanya.', 'Intro to the platform & how it works.'),
+INSERT INTO modules (day, num, title_id, title_en, desc_id, desc_en) VALUES(1, 1, 'Apa itu GoClaw', 'What is GoClaw', 'Pengenalan platform & cara kerjanya.', 'Intro to the platform & how it works.'),
 (1, 2, 'LLM & AI Model', 'LLM & AI Models', 'Pemahaman dasar model AI yang men powering agent.', 'Fundamentals of AI models that power agents.'),
 (1, 3, 'Setup GoClaw', 'Setting up GoClaw', 'Instalasi & konfigurasi awal hingga siap dipakai.', 'Initial install & config to get ready.'),
 (1, 4, 'Provider & AI Model Gratis', 'Providers & Free AI Models', 'Pilih model gratis via OpenRouter & provider lain.', 'Pick free models via OpenRouter & others.'),
@@ -52,3 +51,10 @@ INSERT INTO modules (day, num, title_id, title_en, desc_id, desc_en) VALUES
 (3, 13, 'WooCommerce Integration', 'WooCommerce Integration', 'Kelola produk, transaksi, & laporan.', 'Manage products, transactions, & reports.'),
 (3, 14, 'Skills & Tips Prompt Engineering', 'Skills & Prompt Engineering Tips', 'Buat skill & teknik prompt yang efektif.', 'Create skills & effective prompting.'),
 (3, 15, 'Keamanan, Privacy & Best Practices', 'Security, Privacy & Best Practices', 'Simpan API key aman & privasi data.', 'Keep API keys safe & data private.');
+
+CREATE TABLE IF NOT EXISTS module_progress (
+  participant_id INTEGER NOT NULL,
+  module_id INTEGER NOT NULL,
+  completed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(participant_id, module_id)
+);

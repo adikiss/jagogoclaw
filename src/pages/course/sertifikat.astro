@@ -1,0 +1,149 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+import Logo from '@components/ui/Logo.astro';
+import { getDB } from '@db/client';
+import type { Participant } from '@db/types';
+import { buildCertificateNumber } from '@db/types';
+
+const db = getDB(Astro.locals);
+const participantId = Astro.locals.participantId!;
+
+const participant = await db
+  .prepare('SELECT * FROM participants WHERE id = ?')
+  .bind(participantId)
+  .first<Participant>();
+
+if (!participant) return Astro.redirect('/masuk');
+if (participant.payment_status !== 'paid' || participant.status !== 'active') {
+  return Astro.redirect('/daftar/pembayaran');
+}
+
+const totalRow = await db.prepare('SELECT COUNT(*) AS n FROM modules').first<{ n: number }>();
+const doneRow = await db
+  .prepare('SELECT COUNT(*) AS n FROM module_progress WHERE participant_id = ?')
+  .bind(participantId)
+  .first<{ n: number }>();
+
+const total = totalRow?.n ?? 0;
+const done = doneRow?.n ?? 0;
+
+if (total === 0 || done < total) {
+  return Astro.redirect('/course');
+}
+
+const issuedRow = await db
+  .prepare('SELECT MAX(completed_at) AS t FROM module_progress WHERE participant_id = ?')
+  .bind(participantId)
+  .first<{ t: string | null }>();
+const issuedAt = issuedRow?.t ?? new Date().toISOString();
+
+const certNo = buildCertificateNumber(participant.id, issuedAt);
+
+const months = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
+const [y, mo, d] = issuedAt.slice(0, 10).split('-').map(Number);
+const tanggalID = `${d} ${months[(mo ?? 1) - 1]} ${y}`;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/images/goclaw-icon.png" />
+    <title>Sertifikat — {participant.name} — Jago GoClaw</title>
+    <style>
+      @media print {
+        .no-print { display: none !important; }
+        body { background: #ffffff !important; }
+        .cert-wrap { padding: 0 !important; margin: 0 !important; }
+        .cert-sheet {
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        @page { size: A4 landscape; margin: 8mm; }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-100 antialiased">
+    <header class="no-print sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <a href="/" aria-label="Jago GoClaw"><Logo size={24} /></a>
+        <div class="flex items-center gap-3">
+          <a href="/course" class="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">← Kursus</a>
+          <form method="POST" action="/api/participant/logout">
+            <button type="submit" class="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-rose-600 hover:bg-rose-50">Keluar</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <main class="cert-wrap mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-10">
+      <div class="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Sertifikat Anda 🎓</h1>
+          <p class="mt-0.5 text-sm text-slate-500">Unduh sebagai PDF lewat tombol cetak (pilih "Save as PDF").</p>
+        </div>
+        <button
+          type="button"
+          onclick="window.print()"
+          class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Z"/></svg>
+          Cetak / Unduh PDF
+        </button>
+      </div>
+
+      <div class="cert-sheet relative mx-auto w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200/70">
+        <div class="absolute inset-3 rounded-xl border-2 border-brand-500/25"></div>
+        <div class="absolute inset-4 rounded-lg border border-brand-500/15"></div>
+        <div class="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-100/40 blur-2xl"></div>
+        <div class="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-amber-100/40 blur-2xl"></div>
+
+        <div class="relative flex min-h-[560px] flex-col items-center px-8 py-10 text-center sm:px-14 sm:py-14">
+          <img src="/images/goclaw-icon.png" alt="GoClaw" width="64" height="64" class="h-14 w-14 rounded-xl object-contain" />
+          <p class="mt-3 text-xs font-bold uppercase tracking-[0.25em] text-brand-600">Jago GoClaw</p>
+
+          <h2 class="mt-6 font-serif text-3xl font-bold tracking-wide text-slate-900 sm:text-4xl">SERTIFIKAT</h2>
+          <p class="mt-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Certificate of Completion</p>
+
+          <p class="mt-6 text-sm text-slate-500">Diberikan kepada</p>
+          <p class="mt-2 max-w-2xl font-serif text-3xl font-bold text-slate-900 sm:text-4xl">
+            {participant.name}
+          </p>
+          <div class="mt-3 h-px w-48 bg-brand-500/40"></div>
+
+          <p class="mt-6 max-w-xl text-sm leading-relaxed text-slate-600">
+            atas keberhasilan menyelesaikan seluruh <strong>{total} modul</strong> pelatihan
+          </p>
+          <p class="mt-1 font-serif text-lg font-semibold text-brand-700">Jago GoClaw — Setup Karyawan AI yang Kerja 24 Jam</p>
+
+          <div class="mt-auto grid w-full max-w-xl grid-cols-1 gap-6 pt-10 sm:grid-cols-2">
+            <div class="text-center sm:text-left">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tanggal Selesai</p>
+              <p class="mt-1 text-sm font-semibold text-slate-800">{tanggalID}</p>
+            </div>
+            <div class="text-center sm:text-right">
+              <p class="font-serif text-xl italic text-slate-800">Adi Kiswanto</p>
+              <div class="mx-auto mt-1 h-px w-40 bg-slate-300 sm:ml-auto sm:mr-0"></div>
+              <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Instruktur</p>
+            </div>
+          </div>
+
+          <div class="mt-8 flex w-full max-w-xl flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 text-[11px] text-slate-400">
+            <span>No. Sertifikat: <span class="font-mono font-semibold text-slate-500">{certNo}</span></span>
+            <span>Verifikasi: jagoclaw.id/verifikasi</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
