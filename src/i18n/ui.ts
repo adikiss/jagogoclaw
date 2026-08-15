@@ -17,6 +17,9 @@ export const ui = {
     'nav.pricing': 'Harga',
     'nav.instructor': 'Instruktur',
     'nav.cta': 'Daftar',
+    'nav.login': 'Masuk',
+    'nav.myCourse': 'Kursus Saya',
+    'nav.logout': 'Keluar',
 
     'lang.switch': 'English',
 
@@ -78,6 +81,9 @@ export const ui = {
     'nav.pricing': 'Pricing',
     'nav.instructor': 'Instructor',
     'nav.cta': 'Enroll',
+    'nav.login': 'Sign In',
+    'nav.myCourse': 'My Course',
+    'nav.logout': 'Sign Out',
 
     'lang.switch': 'Bahasa Indonesia',
 
