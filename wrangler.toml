@@ -1,7 +1,6 @@
 name = "jagogoclaw"
 pages_build_output_dir = "./dist"
 compatibility_date = "2025-01-01"
-account_id = "999662db57e14ce2af4e731aadaadfae"
 
 # Database Cloudflare D1
 [[d1_databases]]
