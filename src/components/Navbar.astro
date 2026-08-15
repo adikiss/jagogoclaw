@@ -47,7 +47,7 @@ const langSwitchHref = getAlternatePath(Astro.url, otherLocale);
         {localeLabels[otherLocale]}
       </a>
 
-      <div class="nav-guest hidden items-center gap-3 sm:flex">
+      <div class="hidden items-center gap-3 sm:flex">
         <a
           href="/masuk"
           class="text-sm font-semibold text-slate-600 transition-colors hover:text-brand-600"
@@ -57,26 +57,6 @@ const langSwitchHref = getAlternatePath(Astro.url, otherLocale);
         <Button href={site.registerUrl} size="sm">
           {t('nav.cta')}
         </Button>
-      </div>
-
-      <div class="nav-user hidden items-center gap-2 sm:flex">
-        <a
-          href="/course"
-          class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 transition-colors hover:text-brand-700"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
-          </svg>
-          {t('nav.myCourse')}
-        </a>
-        <form method="POST" action="/api/participant/logout">
-          <button
-            type="submit"
-            class="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-500 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-200"
-          >
-            {t('nav.logout')}
-          </button>
-        </form>
       </div>
 
       <button
@@ -111,7 +91,7 @@ const langSwitchHref = getAlternatePath(Astro.url, otherLocale);
         {localeLabels[otherLocale]}
       </a>
 
-      <div class="nav-guest mt-2 border-t border-slate-100 pt-3">
+      <div class="mt-2 border-t border-slate-100 pt-3">
         <a
           href="/masuk"
           class="mobile-menu-link block rounded-lg px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50"
@@ -119,23 +99,6 @@ const langSwitchHref = getAlternatePath(Astro.url, otherLocale);
           {t('nav.login')}
         </a>
         <Button href={site.registerUrl} class="mt-2 w-full">{t('nav.cta')}</Button>
-      </div>
-
-      <div class="nav-user mt-2 hidden border-t border-slate-100 pt-3">
-        <a
-          href="/course"
-          class="mobile-menu-link block rounded-lg px-3 py-2 text-base font-semibold text-brand-600 hover:bg-brand-50"
-        >
-          {t('nav.myCourse')}
-        </a>
-        <form method="POST" action="/api/participant/logout">
-          <button
-            type="submit"
-            class="mt-2 w-full rounded-xl bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-100"
-          >
-            {t('nav.logout')}
-          </button>
-        </form>
       </div>
     </div>
   </div>
@@ -168,16 +131,4 @@ const langSwitchHref = getAlternatePath(Astro.url, otherLocale);
       menu?.classList.add('hidden');
     });
   });
-
-  fetch('/api/participant/session')
-    .then((r) => r.json())
-    .then((d) => {
-      if (!d?.authenticated) return;
-      document.querySelectorAll('.nav-guest').forEach((el) => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-user').forEach((el) => {
-        el.classList.remove('hidden');
-        el.classList.add('flex');
-      });
-    })
-    .catch(() => {});
 </script>
