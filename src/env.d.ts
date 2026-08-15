@@ -20,6 +20,7 @@ interface D1Database {
 
 declare namespace App {
   interface Locals {
+    participantId?: number;
     runtime?: {
       env: {
         DB?: D1Database;

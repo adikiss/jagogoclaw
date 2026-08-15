@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { createSessionToken, getSecret } from '@lib/auth';
+import { createAdminToken, getSecret, ADMIN_COOKIE } from '@lib/auth';
 
 export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }) => {
   const form = await request.formData();
@@ -15,9 +15,9 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
   }
 
   const secret = getSecret(locals, 'SESSION_SECRET', 'insecure-dev-secret');
-  const token = await createSessionToken(secret);
+  const token = await createAdminToken(secret);
 
-  cookies.set('admin_session', token, {
+  cookies.set(ADMIN_COOKIE, token, {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',

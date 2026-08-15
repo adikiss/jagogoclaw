@@ -19,8 +19,8 @@ const icons = {
 const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: icons.home, soon: false, exact: true },
   { href: '/dashboard/peserta', label: 'Peserta', icon: icons.users, soon: false, exact: false },
-  { href: '/dashboard/kurikulum', label: 'Kurikulum', icon: icons.book, soon: true, exact: false },
-  { href: '/dashboard/harga', label: 'Harga', icon: icons.tag, soon: true, exact: false },
+  { href: '/dashboard/pembayaran', label: 'Pembayaran & Harga', icon: icons.tag, soon: false, exact: false },
+  { href: '/dashboard/kurikulum', label: 'Kurikulum', icon: icons.book, soon: false, exact: false },
   { href: '/dashboard/halaman-depan', label: 'Halaman Depan', icon: icons.page, soon: true, exact: false },
 ];
 
@@ -105,8 +105,6 @@ const isActive = (item: (typeof nav)[number]) =>
                 {item.label}
               </a>
             ))}
-            <span class="flex-none rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-400">Kurikulum · Segera</span>
-            <span class="flex-none rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-400">Harga · Segera</span>
             <span class="flex-none rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-400">Halaman Depan · Segera</span>
           </nav>
         </header>

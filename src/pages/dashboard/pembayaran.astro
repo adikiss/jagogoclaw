@@ -1,0 +1,137 @@
+---
+export const prerender = false;
+
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { getDB } from '@db/client';
+import { getPrice, getBankAccounts } from '@lib/settings';
+import type { Participant } from '@db/types';
+
+const db = getDB(Astro.locals);
+const price = await getPrice(db);
+const banks = await getBankAccounts(db);
+
+const { results: awaiting } = await db
+  .prepare(
+    `SELECT id, name, email, payment_method, payment_confirmed_at
+     FROM participants
+     WHERE payment_status = 'unpaid' AND payment_confirmed_at IS NOT NULL
+     ORDER BY payment_confirmed_at DESC`
+  )
+  .all<Participant>();
+
+const msg = Astro.url.searchParams.get('msg');
+const inputClass =
+  'w-full rounded-lg border-0 px-3 py-2 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-500';
+---
+
+<AdminLayout title="Pembayaran & Harga">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Pembayaran & Harga</h1>
+    <p class="mt-1 text-sm text-slate-500">Atur harga kursus dan rekening bank tujuan transfer peserta.</p>
+  </div>
+
+  {msg === 'saved' && (
+    <div class="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-inset ring-emerald-200">
+      Pengaturan pembayaran tersimpan.
+    </div>
+  )}
+
+  {awaiting.length > 0 && (
+    <div class="mt-6 rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-200 sm:p-6">
+      <h2 class="text-sm font-bold text-amber-800">
+        Menunggu Verifikasi ({awaiting.length})
+      </h2>
+      <ul class="mt-3 divide-y divide-amber-200/70">
+        {awaiting.map((p) => (
+          <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-800">{p.name} <span class="font-normal text-slate-500">· {p.email}</span></p>
+              <p class="text-xs text-slate-500">Klaim transfer via <strong>{p.payment_method}</strong> pada {p.payment_confirmed_at?.slice(0, 16).replace('T', ' ')} UTC</p>
+            </div>
+            <div class="flex gap-2">
+              <form method="POST" action={`/api/admin/participants/${p.id}/verify`}>
+                <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">
+                  ✓ Verifikasi Lunas
+                </button>
+              </form>
+              <a href={`/dashboard/peserta/${p.id}`} class="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-300 hover:bg-white">
+                Detail
+              </a>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <form method="POST" action="/api/admin/bank-accounts" class="mt-6 space-y-6">
+    <div class="rounded-2xl bg-white p-5 ring-1 ring-slate-200/70 sm:p-6">
+      <h2 class="text-sm font-semibold text-slate-900">Harga Kursus</h2>
+      <div class="mt-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label for="price" class="block text-xs font-medium text-slate-500">Harga (Rp)</label>
+          <input type="number" name="price" id="price" min="1000" value={price} required class={`${inputClass} mt-1 w-40`} />
+        </div>
+        <p class="pb-2 text-xs text-slate-400">Dipakai di halaman pendaftaran & instruksi pembayaran. Kode unik 3 digit ditambahkan otomatis per peserta.</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl bg-white p-5 ring-1 ring-slate-200/70 sm:p-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-slate-900">Rekening Bank Tujuan</h2>
+        <button type="button" id="add-bank" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">+ Tambah Bank</button>
+      </div>
+
+      <div id="bank-rows" class="mt-4 space-y-3">
+        {banks.length > 0 ? banks.map((b) => (
+          <div class="bank-row grid grid-cols-1 gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-[140px_1fr_1fr_auto]">
+            <input type="text" name="bank" value={b.bank} placeholder="Nama bank" required class={inputClass} />
+            <input type="text" name="number" value={b.number} placeholder="No. rekening" required class={inputClass} />
+            <input type="text" name="account_name" value={b.name} placeholder="Atas nama" required class={inputClass} />
+            <button type="button" class="remove-bank self-center rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" title="Hapus baris">✕</button>
+          </div>
+        )) : (
+          <div class="bank-row grid grid-cols-1 gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-[140px_1fr_1fr_auto]">
+            <input type="text" name="bank" placeholder="Nama bank" required class={inputClass} />
+            <input type="text" name="number" placeholder="No. rekening" required class={inputClass} />
+            <input type="text" name="account_name" placeholder="Atas nama" required class={inputClass} />
+            <button type="button" class="remove-bank self-center rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" title="Hapus baris">✕</button>
+          </div>
+        )}
+      </div>
+
+      <div class="mt-5 border-t border-slate-100 pt-4">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 hover:bg-brand-700">
+          Simpan Pengaturan
+        </button>
+      </div>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  const rows = document.getElementById('bank-rows');
+  const addBtn = document.getElementById('add-bank');
+
+  function bindRemove() {
+    rows?.querySelectorAll('.remove-bank:not([data-bound])').forEach((btn) => {
+      btn.setAttribute('data-bound', '1');
+      btn.addEventListener('click', () => {
+        if (rows.querySelectorAll('.bank-row').length > 1) btn.closest('.bank-row')?.remove();
+        else alert('Minimal satu rekening harus ada — kosongkan saja isinya jika belum siap.');
+      });
+    });
+  }
+  bindRemove();
+
+  addBtn?.addEventListener('click', () => {
+    const first = rows?.querySelector('.bank-row');
+    if (!first) return;
+    const clone = first.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('input').forEach((i) => (i.value = ''));
+    clone.querySelector('.remove-bank')?.removeAttribute('data-bound');
+    rows?.appendChild(clone);
+    clone.querySelector('input')?.focus();
+    bindRemove();
+  });
+</script>

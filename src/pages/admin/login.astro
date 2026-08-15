@@ -2,11 +2,11 @@
 export const prerender = false;
 
 import '../../styles/global.css';
-import { verifySessionToken, getSecret } from '@lib/auth';
+import { verifyAdminToken, getSecret, ADMIN_COOKIE } from '@lib/auth';
 
-const token = Astro.cookies.get('admin_session')?.value;
+const token = Astro.cookies.get(ADMIN_COOKIE)?.value;
 const secret = getSecret(Astro.locals, 'SESSION_SECRET', 'insecure-dev-secret');
-if (await verifySessionToken(token, secret)) {
+if (await verifyAdminToken(token, secret)) {
   return Astro.redirect('/dashboard');
 }
 

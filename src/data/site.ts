@@ -3,8 +3,8 @@ export const site = {
   domain: 'jagoclaw.id',
   url: 'https://jagoclaw.id',
 
-  // TODO: ganti dengan URL aplikasi GoClaw yang sebenarnya untuk pendaftaran
-  registerUrl: 'https://app.goclaw.com/register',
+  // Tombol "Daftar" mengarah ke halaman pendaftaran di situs ini
+  registerUrl: '/daftar',
 
   // TODO: ganti dengan email support final (bisa pakai Google Workspace setelah beli domain)
   email: 'hello@jagoclaw.id',

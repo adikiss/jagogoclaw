@@ -1,0 +1,148 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+import Navbar from '@components/Navbar.astro';
+import Footer from '@components/Footer.astro';
+import Logo from '@components/ui/Logo.astro';
+import { getDB } from '@db/client';
+import { getPrice, getBankAccounts } from '@lib/settings';
+import { formatIDR, type Participant } from '@db/types';
+import { PARTICIPANT_COOKIE } from '@lib/auth';
+import { verifyParticipantToken, getSecret } from '@lib/auth';
+
+const token = Astro.cookies.get(PARTICIPANT_COOKIE)?.value;
+const secret = getSecret(Astro.locals, 'SESSION_SECRET', 'insecure-dev-secret');
+const participantId = await verifyParticipantToken(token, secret);
+
+if (participantId === null) return Astro.redirect('/masuk');
+
+const db = getDB(Astro.locals);
+const participant = await db
+  .prepare('SELECT * FROM participants WHERE id = ?')
+  .bind(participantId)
+  .first<Participant>();
+
+if (!participant) {
+  Astro.cookies.delete(PARTICIPANT_COOKIE, { path: '/' });
+  return Astro.redirect('/masuk');
+}
+
+if (participant.payment_status === 'paid' && participant.status === 'active') {
+  return Astro.redirect('/course');
+}
+
+const price = await getPrice(db);
+const banks = await getBankAccounts(db);
+const uniqueAmount = price + (participant.id % 1000);
+const msg = Astro.url.searchParams.get('msg');
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/png" href="/images/goclaw-icon.png" />
+    <title>Pembayaran — Jago GoClaw</title>
+  </head>
+  <body class="min-h-screen bg-white antialiased">
+    <Navbar />
+    <main class="bg-gradient-to-b from-brand-50/60 to-white py-12 sm:py-16">
+      <div class="mx-auto max-w-2xl px-4 sm:px-6">
+        <div class="text-center">
+          <p class="text-sm font-medium text-slate-500">Halo, {participant.name} 👋</p>
+          <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">Selesaikan Pembayaran</h1>
+        </div>
+
+        {msg === 'confirmed' && (
+          <div class="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-inset ring-emerald-200">
+            Konfirmasi terkirim! Tunggu admin memverifikasi pembayaran Anda — biasanya cepat. Halaman ini bisa Anda tutup.
+          </div>
+        )}
+
+        <ol class="mt-8 flex items-center gap-2 text-xs font-semibold sm:text-sm">
+          <li class="flex items-center gap-2 rounded-full bg-brand-600 px-3 py-1.5 text-white">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20">1</span> Daftar ✓
+          </li>
+          <li class="h-px flex-1 bg-slate-200"></li>
+          <li class="flex items-center gap-2 rounded-full bg-brand-600 px-3 py-1.5 text-white">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20">2</span> Bayar
+          </li>
+          <li class="h-px flex-1 bg-slate-200"></li>
+          <li class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200">3</span> Verifikasi
+          </li>
+          <li class="h-px flex-1 bg-slate-200"></li>
+          <li class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200">4</span> Belajar
+          </li>
+        </ol>
+
+        <div class="mt-8 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200/70 sm:p-8">
+          <div class="rounded-xl bg-brand-50 px-5 py-4 text-center ring-1 ring-brand-100">
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">Total Transfer</p>
+            <p class="mt-1 text-3xl font-extrabold text-brand-700">{formatIDR(uniqueAmount)}</p>
+            <p class="mt-1 text-xs text-brand-600/80">
+              Transfer <strong>persen</strong> sesuai jumlah di atas (kode unik {String(participant.id % 1000).padStart(3, '0')} untuk mempercepat verifikasi).
+            </p>
+          </div>
+
+          <h2 class="mt-8 text-sm font-bold text-slate-900">Pilih Bank Tujuan Transfer</h2>
+          {banks.length > 0 ? (
+            <form method="POST" action="/api/participant/confirm-payment" class="mt-4 space-y-3">
+              {banks.map((bank, i) => (
+                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/50">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    value={bank.bank}
+                    required
+                    checked={i === 0}
+                    class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span class="flex-1">
+                    <span class="block text-sm font-bold text-slate-900">{bank.bank}</span>
+                    <span class="block font-mono text-sm text-slate-700">{bank.number}</span>
+                    <span class="block text-xs text-slate-500">a.n. {bank.name}</span>
+                  </span>
+                </label>
+              ))}
+
+              {participant.payment_confirmed_at ? (
+                <div class="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+                  Konfirmasi sudah dikirim
+                  {participant.payment_method ? ` via ${participant.payment_method}` : ''}
+                  {' '}pada {participant.payment_confirmed_at.slice(0, 16).replace('T', ' ')} UTC. Sedang menunggu verifikasi admin.
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  class="w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700"
+                >
+                  Saya Sudah Transfer
+                </button>
+              )}
+            </form>
+          ) : (
+            <p class="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+              Metode pembayaran belum tersedia. Hubungi admin: <a href="mailto:hello@jagoclaw.id" class="font-medium text-brand-600">hello@jagoclaw.id</a>
+            </p>
+          )}
+
+          <div class="mt-6 border-t border-slate-100 pt-4 text-xs text-slate-400">
+            Setelah transfer, klik tombol di atas. Admin akan memverifikasi lalu Anda bisa masuk ke
+            <a href="/course" class="font-medium text-brand-600">area kursus</a> dengan email & password akun Anda.
+          </div>
+        </div>
+
+        <p class="mt-6 text-center text-sm text-slate-500">
+          Sudah pernah bayar & terverifikasi? <a href="/course" class="font-semibold text-brand-600 hover:text-brand-700">Masuk ke kursus →</a>
+        </p>
+      </div>
+    </main>
+    <Footer />
+    <div class="hidden"><Logo size={16} /></div>
+  </body>
+</html>

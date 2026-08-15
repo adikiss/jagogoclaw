@@ -6,11 +6,31 @@ export interface Participant {
   name: string;
   email: string;
   phone: string | null;
+  password_hash: string | null;
   status: ParticipantStatus;
   payment_status: PaymentStatus;
+  payment_method: string | null;
+  payment_confirmed_at: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface CourseModule {
+  id: number;
+  day: number;
+  num: number;
+  title_id: string;
+  title_en: string;
+  desc_id: string;
+  desc_en: string;
+  video_url: string | null;
+}
+
+export interface BankAccount {
+  bank: string;
+  number: string;
+  name: string;
 }
 
 export const statusLabels: Record<ParticipantStatus, string> = {
@@ -35,4 +55,8 @@ export function isPaymentStatus(v: string): v is PaymentStatus {
 export function formatDate(sqlDate: string | null): string {
   if (!sqlDate) return '-';
   return sqlDate.slice(0, 16).replace('T', ' ');
+}
+
+export function formatIDR(n: number): string {
+  return 'Rp ' + n.toLocaleString('id-ID');
 }
