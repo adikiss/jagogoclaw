@@ -38,18 +38,19 @@ Set di `.dev.vars` (lokal) dan Cloudflare Pages → Settings → Environment var
 |---|---|
 | `ADMIN_PASSWORD` | Password login dashboard admin |
 | `SESSION_SECRET` | Secret penanda tanda tangan session cookie (string acak panjang) |
-| `STREAM_CUSTOMER_CODE` *(opsional)* | Customer code Cloudflare Stream (dari dashboard Stream) |
-| `STREAM_SIGNING_KEY_ID` *(opsional)* | Key ID signing Stream (Stream → Settings → signed URLs) |
-| `STREAM_SIGNING_KEY` *(opsional)* | Private key PEM signing Stream — embed video jadi berm token yang tidak bisa dibagikan |
+| `STREAM_CUSTOMER_CODE` *(opsional)* | Customer code Cloudflare Stream (dashboard Stream) |
+| `CLOUDFLARE_ACCOUNT_ID` *(opsional)* | ID akun Cloudflare |
+| `STREAM_API_TOKEN` *(opsional)* | API token permission Stream:Edit — untuk generate token via `/token` endpoint |
+| `STREAM_SIGNING_KEY_ID` *(opsional)* | Alternatif volume tinggi: key ID signing Stream |
+| `STREAM_SIGNING_KEY` *(opsional)* | Alternatif volume tinggi: private key PEM signing Stream |
 
 ## Video Kursus (Cloudflare Stream)
 
-1. Upload video di **dash.cloudflare.com → Stream**.
-2. Aktifkan **Restrict viewing (signed URLs)** di Settings, buat signing key.
-3. Set env vars `STREAM_CUSTOMER_CODE`, `STREAM_SIGNING_KEY_ID`, `STREAM_SIGNING_KEY` di `.dev.vars` (lokal) dan Pages → Settings → Environment variables (produksi).
-4. Di dashboard admin → **Kurikulum**, isi kolom video dengan **UID** video (32 karakter hex) atau URL YouTube (fallback tanpa proteksi).
+1. Upload video di **dash.cloudflare.com → Stream**, aktifkan **Require signed URLs** pada tiap video.
+2. Set env vars (lihat tabel di atas — cara simple: `STREAM_CUSTOMER_CODE` + `CLOUDFLARE_ACCOUNT_ID` + `STREAM_API_TOKEN`).
+3. Di dashboard admin → **Kurikulum**, isi kolom video dengan **UID** video (32 karakter hex) atau URL YouTube (fallback tanpa proteksi).
 
-Halaman `/course` otomatis membuat token tanda tangan (JWT RS256, berlaku 2 jam, per-peserta saat halaman dibuka) — link video tidak bisa dibagikan ke orang lain.
+Halaman `/course` otomatis meminta token dari endpoint `/token` Stream (berlaku 2 jam) — token **menggantikan UID** di URL player sehingga link tidak bisa dibagikan ke orang lain. Bila token API tidak diset, sistem fallback ke signing key JWT RS256; bila keduanya kosong, embed polos (mode testing).
 
 ## Setup D1 (sekali saja, untuk produksi)
 

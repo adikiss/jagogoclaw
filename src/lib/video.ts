@@ -1,4 +1,4 @@
-import { getStreamEnv, createStreamSignedToken, streamEmbedUrl } from './stream';
+import { getStreamEnv, createStreamToken, streamEmbedUrl } from './stream';
 
 export type VideoKind = 'youtube' | 'stream';
 
@@ -46,9 +46,10 @@ export function parseVideoUrl(url: string): VideoRef | null {
 }
 
 /**
- * Bangun URL embed aman:
- * - Stream  : iframe dengan token tanda tangan (expired, terikat video) bila signing dikonfigurasi
- * - YouTube : iframe embed biasa
+ * Bangun URL embed:
+ * - Stream : coba token tanda tangan (API /token atau signing key) — token menggantikan uid di path.
+ *            Bila Stream belum dikonfigurasi, embed polos (mode terbuka, untuk testing).
+ * - YouTube: iframe embed biasa.
  */
 export async function buildEmbedUrl(ref: VideoRef, locals: App.Locals): Promise<string> {
   if (ref.kind === 'youtube') {
@@ -56,10 +57,11 @@ export async function buildEmbedUrl(ref: VideoRef, locals: App.Locals): Promise<
   }
 
   const env = getStreamEnv(locals);
-  if (env.customerCode) {
-    const token = await createStreamSignedToken(ref.id, env);
-    return streamEmbedUrl(ref.id, env.customerCode, token);
+  if (!env.customerCode) {
+    // Customer code wajib untuk domain embed Stream
+    return `https://customer-code.cloudflarestream.com/${ref.id}/iframe`;
   }
 
-  return streamEmbedUrl(ref.id, 'REPLACE_ME');
+  const token = await createStreamToken(ref.id, env);
+  return streamEmbedUrl(ref.id, env.customerCode, token);
 }

@@ -4,10 +4,18 @@ ADMIN_PASSWORD=admin123
 # Secret untuk menandatangani session cookie (dev)
 SESSION_SECRET=ganti-dengan-string-acak-untuk-dev
 
-# Cloudflare Stream (opsional — untuk video kursus dengan token tanda tangan)
-# 1. dash.cloudflare.com → Stream → dapatkan "Customer code" (mis. f1e3...)
-# 2. Stream → Settings → "Restrict viewing" / signed URLs → buat signing key
-# 3. Salin key ID dan private key (PEM) ke bawah ini
+# ── Cloudflare Stream (opsional — video kursus dengan token, tidak bisa dibagikan) ──
+# CARA SIMPLE (direkomendasikan, cukup 3 var):
+#   1. STREAM_CUSTOMER_CODE : dari dashboard Stream (format 4-6 karakter, mis. f1e3a2)
+#   2. CLOUDFLARE_ACCOUNT_ID: ID akun Cloudflare kamu
+#   3. STREAM_API_TOKEN     : buat di dash.cloudflare.com → My Profile → API Tokens
+#                             → Create Token → template "Cloudflare Stream" (Edit)
+# Lalu aktifkan "Require signed URLs" pada tiap video di dashboard Stream.
+#
+# ALTERNATIF volume tinggi (>1000 token/hari, tanpa rate limit): pakai signing key
+# (Stream → Settings → API keys) dan isi 2 var berikut sebagai gantinya:
 STREAM_CUSTOMER_CODE=
+CLOUDFLARE_ACCOUNT_ID=
+STREAM_API_TOKEN=
 STREAM_SIGNING_KEY_ID=
 STREAM_SIGNING_KEY=
