@@ -18,6 +18,7 @@ export const ui = {
     'nav.instructor': 'Instruktur',
     'nav.cta': 'Daftar',
     'nav.login': 'Masuk',
+    'nav.verify': 'Verifikasi Sertifikat',
 
     'lang.switch': 'English',
 
@@ -80,6 +81,7 @@ export const ui = {
     'nav.instructor': 'Instructor',
     'nav.cta': 'Enroll',
     'nav.login': 'Sign In',
+    'nav.verify': 'Verify Certificate',
 
     'lang.switch': 'Bahasa Indonesia',
 

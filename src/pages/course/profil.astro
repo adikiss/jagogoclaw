@@ -1,0 +1,136 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+import Logo from '@components/ui/Logo.astro';
+import { getDB } from '@db/client';
+import type { Participant } from '@db/types';
+import { formatDate } from '@db/types';
+
+const db = getDB(Astro.locals);
+const participantId = Astro.locals.participantId!;
+
+const participant = await db
+  .prepare('SELECT * FROM participants WHERE id = ?')
+  .bind(participantId)
+  .first<Participant>();
+
+if (!participant) return Astro.redirect('/masuk');
+if (participant.payment_status !== 'paid' || participant.status !== 'active') {
+  return Astro.redirect('/daftar/pembayaran');
+}
+
+const msg = Astro.url.searchParams.get('msg');
+const error = Astro.url.searchParams.get('error');
+
+const flash: Record<string, string> = {
+  saved: 'Profil berhasil diperbarui.',
+  password: 'Password berhasil diubah.',
+};
+const errors: Record<string, string> = {
+  name: 'Nama tidak boleh kosong.',
+  short: 'Password baru minimal 6 karakter.',
+  wrongpass: 'Password saat ini salah.',
+};
+
+const inputClass =
+  'mt-1.5 block w-full rounded-xl border-0 px-3.5 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-500';
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/images/goclaw-icon.png" />
+    <title>Profil Saya — Jago GoClaw</title>
+  </head>
+  <body class="min-h-screen bg-slate-100 antialiased">
+    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <a href="/" aria-label="Jago GoClaw"><Logo size={24} /></a>
+        <div class="flex items-center gap-3">
+          <span class="hidden text-sm font-medium text-slate-600 sm:block">{participant.name}</span>
+          <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+            {participant.payment_status === 'paid' ? 'Lunas' : 'Belum Lunas'}
+          </span>
+          <a href="/course" class="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">Kursus</a>
+          <form method="POST" action="/api/participant/logout">
+            <button type="submit" class="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-rose-600 hover:bg-rose-50">Keluar</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+      <a href="/course" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Kembali ke kursus
+      </a>
+
+      <h1 class="mt-4 text-2xl font-bold text-slate-900">Profil Saya</h1>
+
+      {msg && flash[msg] && (
+        <div class="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-inset ring-emerald-200">{flash[msg]}</div>
+      )}
+      {error && errors[error] && (
+        <div class="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-200">{errors[error]}</div>
+      )}
+
+      <div class="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/70 sm:p-8">
+        <h2 class="text-sm font-semibold text-slate-900">Informasi Akun</h2>
+        <dl class="mt-4 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4 text-sm">
+          <div>
+            <dt class="text-xs font-medium text-slate-400">Email</dt>
+            <dd class="mt-0.5 font-medium text-slate-700">{participant.email}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium text-slate-400">Status</dt>
+            <dd class="mt-0.5 font-medium text-emerald-600">Aktif · Lunas</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium text-slate-400">Terdaftar</dt>
+            <dd class="mt-0.5 font-medium text-slate-700">{formatDate(participant.created_at)} UTC</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium text-slate-400">ID Peserta</dt>
+            <dd class="mt-0.5 font-mono font-medium text-slate-700">#{String(participant.id).padStart(4, '0')}</dd>
+          </div>
+        </dl>
+
+        <form method="POST" action="/api/participant/profile" class="mt-6 space-y-4">
+          <div>
+            <label for="name" class="block text-sm font-medium text-slate-700">Nama Lengkap <span class="text-rose-500">*</span></label>
+            <input type="text" name="name" id="name" required value={participant.name} class={inputClass} />
+          </div>
+          <div>
+            <label for="phone" class="block text-sm font-medium text-slate-700">WhatsApp</label>
+            <input type="tel" name="phone" id="phone" value={participant.phone ?? ''} placeholder="08xxxxxxxxxx" class={inputClass} />
+          </div>
+          <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700">
+            Simpan Profil
+          </button>
+        </form>
+      </div>
+
+      <div class="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/70 sm:p-8">
+        <h2 class="text-sm font-semibold text-slate-900">Ganti Password</h2>
+        <p class="mt-1 text-xs text-slate-400">Password dipakai untuk masuk ke area kursus.</p>
+        <form method="POST" action="/api/participant/password" class="mt-4 space-y-4">
+          <div>
+            <label for="current_password" class="block text-sm font-medium text-slate-700">Password Saat Ini <span class="text-rose-500">*</span></label>
+            <input type="password" name="current_password" id="current_password" required autocomplete="current-password" class={inputClass} />
+          </div>
+          <div>
+            <label for="new_password" class="block text-sm font-medium text-slate-700">Password Baru <span class="text-rose-500">*</span></label>
+            <input type="password" name="new_password" id="new_password" required minlength="6" autocomplete="new-password" placeholder="Minimal 6 karakter" class={inputClass} />
+          </div>
+          <button type="submit" class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-colors hover:bg-slate-700">
+            Ganti Password
+          </button>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>
